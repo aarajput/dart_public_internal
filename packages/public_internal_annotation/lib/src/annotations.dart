@@ -4,5 +4,9 @@ const publicInternal = PublicInternal();
 
 @Target({TargetKind.classType})
 class PublicInternal {
-  const PublicInternal();
+  final int parentStep;
+
+  const PublicInternal({
+    final parentStep = 0,
+  });
 }

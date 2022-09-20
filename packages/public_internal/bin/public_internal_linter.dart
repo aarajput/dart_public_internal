@@ -36,6 +36,11 @@ class _Visitor extends RecursiveAstVisitor<void> {
   });
 
   @override
+  void visitClassDeclaration(ClassDeclaration node) {
+    super.visitClassDeclaration(node);
+  }
+
+  @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
     final element = node.staticElement;
     if (element is! ClassElement) {
@@ -58,13 +63,11 @@ class _Visitor extends RecursiveAstVisitor<void> {
             ),
             severity: LintSeverity.warning,
             correction: 'export ${node.name} using export keyword',
+            url: 'https://pub.dev/packages/public_internal',
           ),
         );
       }
     }
-    print(
-      'visitSimpleIdentifier: ${node.toString()}:: $isPublicInternal',
-    );
     super.visitSimpleIdentifier(node);
   }
 }
@@ -106,7 +109,6 @@ bool _isInCorrectFolder({
   if (classFile == null) {
     return true;
   }
-  print(classFile.parent.path);
-  print(unitFile.parent.path);
-  return unitFile.parent.path.startsWith(classFile.parent.path);
+  final dir = classFile.parent;
+  return unitFile.parent.path.startsWith(dir.path);
 }
