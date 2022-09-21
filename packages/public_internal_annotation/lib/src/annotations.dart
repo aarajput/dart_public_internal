@@ -7,6 +7,6 @@ class PublicInternal {
   final int parentStep;
 
   const PublicInternal({
-    final parentStep = 0,
-  });
+    this.parentStep = 0,
+  }) :assert(!parentStep.isNegative);
 }
