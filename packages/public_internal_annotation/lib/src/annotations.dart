@@ -8,5 +8,5 @@ class PublicInternal {
 
   const PublicInternal({
     this.parentStep = 0,
-  }) :assert(!parentStep.isNegative);
+  });
 }
