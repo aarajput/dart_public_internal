@@ -57,7 +57,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
             ),
             severity: LintSeverity.warning,
             correction:
-                'Use ${node.name} only in ${classInfo.directory.path} directory',
+                'Use ${node.name} only in ${classInfo.directory.path} directory or its subdirectories.',
             url: 'https://pub.dev/packages/public_internal',
           ),
         );
