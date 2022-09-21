@@ -34,11 +34,6 @@ class _Visitor extends RecursiveAstVisitor<void> {
   });
 
   @override
-  void visitClassDeclaration(ClassDeclaration node) {
-    super.visitClassDeclaration(node);
-  }
-
-  @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
     final element = node.staticElement;
     if (element is! ClassElement) {
@@ -47,7 +42,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
     final publicInternalAnnotation = _getPublicInternalAnnotation(element);
     if (publicInternalAnnotation != null) {
       final classInfo = _isInCorrectFolder(
-        unitPath: unit.path,
+        unitPath: unit.libraryElement.source.uri.path,
         mainClass: element,
         parentStep: publicInternalAnnotation.parentStep,
       );
@@ -105,20 +100,7 @@ ClassInfo _isInCorrectFolder({
   required int parentStep,
 }) {
   final unitFile = File(unitPath);
-  File? classFile;
-  for (final sUri in (mainClass.location?.components ?? [])) {
-    final file = File.fromUri(Uri.parse(sUri));
-    if (file.existsSync()) {
-      classFile = file;
-      break;
-    }
-  }
-  if (classFile == null) {
-    return ClassInfo(
-      directory: Directory('/'),
-      isUnitPathSubset: true,
-    );
-  }
+  final classFile = File(mainClass.source.uri.path);
   var dir = classFile.parent;
   for (int i = 0; i < parentStep; i++) {
     dir = dir.parent;
