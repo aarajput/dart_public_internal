@@ -10,3 +10,16 @@ class Example2 {}
   parentStep: 1,
 )
 class Example3 {}
+
+@PublicInternal(
+  isStrict: true,
+)
+class Example4 {}
+
+@PublicInternal(
+  parentStep: 1,
+  isStrict: true,
+)
+class Example5 {
+  final a = 'aasedf class';
+}

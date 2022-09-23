@@ -35,35 +35,45 @@ class _Visitor extends RecursiveAstVisitor<void> {
 
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
+    _visitSimpleIdentifier(node);
+    super.visitSimpleIdentifier(node);
+  }
+
+  void _visitSimpleIdentifier(SimpleIdentifier node) {
     final element = node.staticElement;
     if (element is! ClassElement) {
       return;
     }
-    final publicInternalAnnotation = _getPublicInternalAnnotation(element);
-    if (publicInternalAnnotation != null) {
-      final classInfo = _isInCorrectFolder(
-        unitPath: unit.libraryElement.source.uri.path,
-        mainClass: element,
-        parentStep: publicInternalAnnotation.parentStep,
-      );
-      if (!classInfo.isUnitPathSubset) {
-        lints.add(
-          Lint(
-            code: 'public_internal',
-            message: '${node.name} is public internal.',
-            location: unit.lintLocationFromOffset(
-              node.offset,
-              length: node.name.length,
-            ),
-            severity: LintSeverity.warning,
-            correction:
-                'Use ${node.name} only in ${classInfo.directory.path} directory or its subdirectories.',
-            url: 'https://pub.dev/packages/public_internal',
-          ),
-        );
-      }
+    final annotation = _getPublicInternalAnnotation(element);
+    if (annotation == null) {
+      return;
     }
-    super.visitSimpleIdentifier(node);
+    if (annotation.isStrict &&
+        node.parent?.childEntities.map((e) => e.toString()).contains('class') ==
+            true) {
+      return;
+    }
+    final classInfo = _isInCorrectFolder(
+      unitPath: unit.libraryElement.source.uri.path,
+      mainClass: element,
+      annotation: annotation,
+    );
+    if (!classInfo.isInCorrectDirectory) {
+      lints.add(
+        Lint(
+          code: 'public_internal',
+          message: '${node.name} is public internal.',
+          location: unit.lintLocationFromOffset(
+            node.offset,
+            length: node.name.length,
+          ),
+          severity: LintSeverity.warning,
+          correction:
+              'Use ${node.name} only in ${classInfo.directory.path} directory${annotation.isStrict ? '.' : ' or its subdirectories.'}',
+          url: 'https://pub.dev/packages/public_internal',
+        ),
+      );
+    }
   }
 }
 
@@ -79,9 +89,14 @@ PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
             .computeConstantValue()
             ?.getField('parentStep')
             ?.toIntValue();
-        if (parentStep != null) {
+        final isStrict = annotation
+            .computeConstantValue()
+            ?.getField('isStrict')
+            ?.toBoolValue();
+        if (parentStep != null && isStrict != null) {
           return PublicInternal(
             parentStep: parentStep,
+            isStrict: isStrict,
           );
         }
       }
@@ -97,17 +112,19 @@ PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
 ClassInfo _isInCorrectFolder({
   required String unitPath,
   required ClassElement mainClass,
-  required int parentStep,
+  required PublicInternal annotation,
 }) {
   final unitFile = File(unitPath);
   final classFile = File(mainClass.source.uri.path);
   var dir = classFile.parent;
-  for (int i = 0; i < parentStep; i++) {
+  for (int i = 0; i < annotation.parentStep; i++) {
     dir = dir.parent;
   }
-  final isSubset = '${unitFile.parent.path}/'.startsWith('${dir.path}/');
+  final isInCorrectDirectory = annotation.isStrict
+      ? '${unitFile.parent.path}/' == '${dir.path}/'
+      : '${unitFile.parent.path}/'.startsWith('${dir.path}/');
   return ClassInfo(
     directory: dir,
-    isUnitPathSubset: isSubset,
+    isInCorrectDirectory: isInCorrectDirectory,
   );
 }
