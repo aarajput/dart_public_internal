@@ -48,10 +48,15 @@ class _Visitor extends RecursiveAstVisitor<void> {
     if (annotation == null) {
       return;
     }
-    if (annotation.isStrict &&
-        node.parent?.childEntities.map((e) => e.toString()).contains('class') ==
-            true) {
-      return;
+    if (annotation.isStrict) {
+      final entities =
+          node.parent?.childEntities.map((e) => e.toString()).toList() ?? [];
+      if (entities.contains('class')) {
+        return;
+      }
+      if (entities.join('').contains('${node.name}()')) {
+        return;
+      }
     }
     final classInfo = _isInCorrectFolder(
       unitPath: unit.libraryElement.source.uri.path,

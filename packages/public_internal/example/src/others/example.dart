@@ -21,5 +21,11 @@ class Example4 {}
   isStrict: true,
 )
 class Example5 {
-  final a = 'aasedf class';
+  final a = 'hello class';
+
+  const Example5();
+
+  // void public() {
+  //   final b = 'world';
+  // }
 }
