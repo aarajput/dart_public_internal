@@ -1,0 +1,8 @@
+name: razor_analyzer_plugin_loader
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+
+dependencies:
+  public_internal:
+    path: ../../

@@ -1,4 +1,5 @@
-include: package:lints/recommended.yaml
 analyzer:
   plugins:
-    - custom_lint
+    - public_internal
+
+public_internal:
