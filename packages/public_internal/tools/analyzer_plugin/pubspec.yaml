@@ -5,4 +5,4 @@ environment:
 
 dependencies:
   public_internal:
-    path: ../../
+    path: /Users/ali/Projects/Dart/open_source/public_internal/packages/public_internal

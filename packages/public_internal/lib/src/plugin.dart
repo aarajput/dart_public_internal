@@ -1,13 +1,21 @@
+import 'dart:async';
+
 import 'package:analyzer/dart/analysis/context_builder.dart';
 import 'package:analyzer/dart/analysis/context_locator.dart';
+import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/src/dart/analysis/driver.dart';
-import 'package:analyzer/src/dart/analysis/driver_based_analysis_context.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
+import 'package:analyzer/src/dart/analysis/driver_based_analysis_context.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart' as plugin;
+import 'package:glob/glob.dart';
+import 'package:yaml/yaml.dart';
 
-class PublicInternalAnalyzerPlugin extends ServerPlugin {
-  PublicInternalAnalyzerPlugin(ResourceProvider? provider) : super(provider);
+import 'utils/cache.dart';
+
+class FlutterHooksRulesPlugin extends ServerPlugin {
+  FlutterHooksRulesPlugin(ResourceProvider? provider) : super(provider);
+  // Options options = Options();
 
   @override
   List<String> get fileGlobsToAnalyze => const ['**/*.dart'];
@@ -44,38 +52,95 @@ class PublicInternalAnalyzerPlugin extends ServerPlugin {
     final builder = ContextBuilder(
       resourceProvider: resourceProvider,
     );
+
     final analysisContext = builder.createContext(contextRoot: locator.first);
     final context = analysisContext as DriverBasedAnalysisContext;
     final dartDriver = context.driver;
 
-    // channel.sendNotification(
-    //   plugin.PluginErrorParams(
-    //     true,
-    //     'Failed to load options:',
-    //     's.toString()',
-    //   ).toNotification(),
-    // );
+    try {
+      // options = _loadOptions(context.contextRoot.optionsFile);
+    } catch (e, s) {
+      channel.sendNotification(
+        plugin.PluginErrorParams(
+          true,
+          'Failed to load options: ${e.toString()}',
+          s.toString(),
+        ).toNotification(),
+      );
+    }
+
+
+    runZonedGuarded(
+          () {
+        dartDriver.results.listen((analysisResult) {
+          if (analysisResult is ResolvedUnitResult) {
+            _processResult(
+              dartDriver,
+              analysisResult,
+            );
+          } else if (analysisResult is ErrorsResult) {
+            channel.sendNotification(plugin.PluginErrorParams(
+              false,
+              'ErrorResult $analysisResult',
+              '',
+            ).toNotification());
+          }
+        });
+      },
+          (Object e, StackTrace stackTrace) {
+        channel.sendNotification(
+          plugin.PluginErrorParams(
+            false,
+            'Unexpected error: ${e.toString()}',
+            stackTrace.toString(),
+          ).toNotification(),
+        );
+      },
+    );
 
     return dartDriver;
   }
 
-  @override
-  void contentChanged(String path) {
-    super.driverForPath(path)?.addFile(path);
-  }
 
-  @override
-  Future<plugin.AnalysisSetContextRootsResult> handleAnalysisSetContextRoots(
-    plugin.AnalysisSetContextRootsParams parameters,
-  ) async {
-    final result = await super.handleAnalysisSetContextRoots(parameters);
-    return result;
-  }
+  List<Glob>? _excludeGlobs;
+  final Cache<String, bool> _excludeCache = Cache(5000);
 
-  @override
-  Future<plugin.AnalysisSetPriorityFilesResult> handleAnalysisSetPriorityFiles(
-    plugin.AnalysisSetPriorityFilesParams parameters,
-  ) async {
-    return plugin.AnalysisSetPriorityFilesResult();
+  void _processResult(
+      AnalysisDriver dartDriver,
+      ResolvedUnitResult analysisResult,
+      ) {
+    final path = analysisResult.path;
+
+    // _excludeGlobs ??= options.analyzer.exclude.map((e) => Glob(e)).toList();
+
+    final excluded = _excludeCache.doCache(
+      path,
+          () => _excludeGlobs!.any((e) => e.matches(path)),
+    );
+
+    if (excluded) return;
+
+    try {
+      // final errors = _check(
+      //   dartDriver,
+      //   path,
+      //   analysisResult,
+      // );
+
+      // channel.sendNotification(
+      //   plugin.AnalysisErrorsParams(
+      //     path,
+      //     errors.map((e) => e.error).toList(),
+      //   ).toNotification(),
+      // );
+    } catch (e, stackTrace) {
+      channel.sendNotification(
+        plugin.PluginErrorParams(
+          false,
+          e.toString(),
+          stackTrace.toString(),
+        ).toNotification(),
+      );
+    }
   }
 }

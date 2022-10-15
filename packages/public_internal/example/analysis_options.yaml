@@ -1,5 +1,0 @@
-analyzer:
-  plugins:
-    - public_internal
-
-public_internal:
