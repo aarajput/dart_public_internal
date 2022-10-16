@@ -7,10 +7,12 @@ import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/src/dart/analysis/driver.dart';
 import 'package:analyzer/src/dart/analysis/driver_based_analysis_context.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
-import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart' as plugin;
 import 'package:glob/glob.dart';
+import 'package:yaml/yaml.dart';
 
+import 'lint/config.dart';
+import 'lint/rules.dart';
 import 'utils/cache.dart';
 import 'utils/lint_error.dart';
 import 'utils/suppression.dart';
@@ -19,8 +21,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
   PublicInternalServerPlugin(ResourceProvider? provider) : super(provider);
 
   var _filesFromSetPriorityFilesRequest = <String>[];
-
-  // Options options = Options();
+  Options options = Options();
 
   @override
   List<String> get fileGlobsToAnalyze => const ['**/*.dart'];
@@ -33,7 +34,6 @@ class PublicInternalServerPlugin extends ServerPlugin {
 
   @override
   AnalysisDriverGeneric createAnalysisDriver(plugin.ContextRoot contextRoot) {
-    print('createAnalysisDriver');
     final rootPath = contextRoot.root;
     final locator =
         ContextLocator(resourceProvider: resourceProvider).locateRoots(
@@ -64,7 +64,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
     final dartDriver = context.driver;
 
     try {
-      // options = _loadOptions(context.contextRoot.optionsFile);
+      options = _loadOptions(context.contextRoot.optionsFile);
     } catch (e, s) {
       channel.sendNotification(
         plugin.PluginErrorParams(
@@ -115,17 +115,16 @@ class PublicInternalServerPlugin extends ServerPlugin {
     AnalysisDriver dartDriver,
     ResolvedUnitResult analysisResult,
   ) {
-    print('_processResult');
     final path = analysisResult.path;
 
-    // _excludeGlobs ??= options.analyzer.exclude.map((e) => Glob(e)).toList();
+    _excludeGlobs ??= options.analyzer.exclude.map((e) => Glob(e)).toList();
 
-    // final excluded = _excludeCache.doCache(
-    //   path,
-    //   () => _excludeGlobs!.any((e) => e.matches(path)),
-    // );
+    final excluded = _excludeCache.doCache(
+      path,
+      () => _excludeGlobs!.any((e) => e.matches(path)),
+    );
 
-    // if (excluded) return;
+    if (excluded) return;
 
     try {
       final errors = _check(
@@ -133,26 +132,10 @@ class PublicInternalServerPlugin extends ServerPlugin {
         path,
         analysisResult,
       );
-
       channel.sendNotification(
         plugin.AnalysisErrorsParams(
           path,
-          [
-            AnalysisError(
-              AnalysisErrorSeverity.WARNING,
-              AnalysisErrorType.LINT,
-              Location(
-                path,
-                0,
-                20,
-                1,
-                1,
-              ),
-              'message',
-              '123',
-              hasFix: false,
-            ),
-          ],
+          errors.map((e) => e.error).toList(),
         ).toNotification(),
       );
     } catch (e, stackTrace) {
@@ -188,18 +171,21 @@ class PublicInternalServerPlugin extends ServerPlugin {
       );
     }
 
-    // findExhaustiveKeys(
-    //   analysisResult.unit,
-    //   options: options.flutterHooksLintPlugin.exhaustiveKeys,
-    //   onReport: onReport,
-    // );
-
-    // findRulesOfHooks(
-    //   analysisResult.unit,
-    //   onReport: onReport,
-    // );
+    findRulesOfPublicInternal(
+      unit: analysisResult.unit,
+      filePath: filePath,
+      onReport: onReport,
+    );
 
     return errors;
+  }
+
+  Options _loadOptions(File? file) {
+    if (file == null) return Options();
+
+    final yaml = loadYaml(file.readAsStringSync());
+
+    return Options.fromYaml(yaml);
   }
 
   @override
