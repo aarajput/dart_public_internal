@@ -66,7 +66,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
       mainClass: element,
       annotation: annotation,
     );
-    if (!classInfo.isInCorrectDirectory || true) {
+    if (!classInfo.isInCorrectDirectory) {
       onReport(LintError(
         message: '${node.name} is public internal.',
         code: 'public_internal',
