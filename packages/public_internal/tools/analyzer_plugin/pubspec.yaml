@@ -6,3 +6,4 @@ environment:
 dependencies:
   public_internal:
     path: /Users/ali/Projects/Dart/open_source/public_internal/packages/public_internal
+  web_socket_channel: ^2.2.0
