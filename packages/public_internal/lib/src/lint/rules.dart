@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
@@ -12,27 +13,23 @@ const _annotationPackage =
 const _annotationClass = 'PublicInternal';
 
 void findRulesOfPublicInternal({
-  required CompilationUnit unit,
-  required String filePath,
+  required ResolvedUnitResult analysisResult,
   required void Function(LintError) onReport,
 }) {
-  unit.visitChildren(
+  analysisResult.unit.visitChildren(
     _Visitor(
-      unit: unit,
-      filePath: filePath,
+      fileUri: analysisResult.uri,
       onReport: onReport,
     ),
   );
 }
 
 class _Visitor extends RecursiveAstVisitor<void> {
-  final String filePath;
-  final CompilationUnit unit;
+  final Uri fileUri;
   final void Function(LintError) onReport;
 
   _Visitor({
-    required this.unit,
-    required this.filePath,
+    required this.fileUri,
     required this.onReport,
   });
 
@@ -62,7 +59,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
       }
     }
     final classInfo = _isInCorrectFolder(
-      unitPath: filePath,
+      unitUri: fileUri,
       mainClass: element,
       annotation: annotation,
     );
@@ -71,21 +68,10 @@ class _Visitor extends RecursiveAstVisitor<void> {
         message: '${node.name} is public internal.',
         code: 'public_internal',
         errNode: node,
+        correction:
+            'Use ${node.name} only in ${classInfo.directory.path} directory${annotation.isStrict ? '.' : ' or its subdirectories.'}',
+        url: 'https://pub.dev/packages/public_internal',
       ));
-      // lints.add(
-      //   Lint(
-      //     code: 'public_internal',
-      //     message: '${node.name} is public internal.',
-      //     location: unit.lintLocationFromOffset(
-      //       node.offset,
-      //       length: node.name.length,
-      //     ),
-      //     severity: LintSeverity.warning,
-      //     correction:
-      //         'Use ${node.name} only in ${classInfo.directory.path} directory${annotation.isStrict ? '.' : ' or its subdirectories.'}',
-      //     url: 'https://pub.dev/packages/public_internal',
-      //   ),
-      // );
     }
   }
 }
@@ -123,11 +109,11 @@ PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
 }
 
 ClassInfo _isInCorrectFolder({
-  required String unitPath,
+  required Uri unitUri,
   required ClassElement mainClass,
   required PublicInternal annotation,
 }) {
-  final unitFile = File(unitPath);
+  final unitFile = File(unitUri.path);
   final classFile = File(mainClass.source.uri.path);
   var dir = classFile.parent;
   for (int i = 0; i < annotation.parentStep; i++) {

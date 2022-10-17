@@ -5,19 +5,23 @@ import 'package:analyzer_plugin/protocol/protocol_common.dart' as plugin;
 import 'package:analyzer_plugin/protocol/protocol_generated.dart' as plugin;
 
 class LintError {
-  const LintError({
-    required this.message,
-    required this.code,
-    this.key,
-    this.ctxNode,
-    required this.errNode,
-  });
-
   final String message;
   final String code;
   final String? key;
   final AstNode? ctxNode;
   final AstNode errNode;
+  final String? correction;
+  final String? url;
+
+  const LintError({
+    required this.message,
+    required this.code,
+    required this.errNode,
+    this.key,
+    this.ctxNode,
+    this.correction,
+    this.url,
+  });
 
   plugin.AnalysisErrorFixes toAnalysisErrorFixes(
     String file,
@@ -32,6 +36,8 @@ class LintError {
         location,
         message,
         code,
+        correction: correction,
+        url: url,
       ),
     );
   }

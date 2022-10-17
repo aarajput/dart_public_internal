@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'package:public_internal/public_internal.dart' as public_internal;
 import 'package:web_socket_channel/io.dart';
 
-const useDebuggingVariant = false;
+const useDebuggingVariant = true;
 
 void main(List<String> args, SendPort sendPort) {
   if (useDebuggingVariant) {

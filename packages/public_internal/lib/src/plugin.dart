@@ -129,7 +129,6 @@ class PublicInternalServerPlugin extends ServerPlugin {
     try {
       final errors = _check(
         dartDriver,
-        path,
         analysisResult,
       );
       channel.sendNotification(
@@ -151,7 +150,6 @@ class PublicInternalServerPlugin extends ServerPlugin {
 
   List<plugin.AnalysisErrorFixes> _check(
     AnalysisDriver driver,
-    String filePath,
     ResolvedUnitResult analysisResult,
   ) {
     final errors = <plugin.AnalysisErrorFixes>[];
@@ -167,13 +165,15 @@ class PublicInternalServerPlugin extends ServerPlugin {
       }
 
       errors.add(
-        err.toAnalysisErrorFixes(filePath, analysisResult),
+        err.toAnalysisErrorFixes(
+          analysisResult.path,
+          analysisResult,
+        ),
       );
     }
 
     findRulesOfPublicInternal(
-      unit: analysisResult.unit,
-      filePath: filePath,
+      analysisResult: analysisResult,
       onReport: onReport,
     );
 
