@@ -1,6 +1,6 @@
 name: public_internal
 description: Linter to make class only accessible within its directory or subdirectories.
-version: 1.0.2
+version: 2.0.0
 homepage: https://github.com/aarajput/dart_public_internal/tree/master/packages/public_internal
 repository: https://github.com/aarajput/dart_public_internal
 issue_tracker: https://github.com/aarajput/dart_public_internal/issues
