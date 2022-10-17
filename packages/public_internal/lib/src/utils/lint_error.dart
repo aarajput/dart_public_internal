@@ -1,6 +1,5 @@
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/dart/ast/token.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart' as plugin;
 import 'package:analyzer_plugin/protocol/protocol_generated.dart' as plugin;
 
@@ -12,11 +11,13 @@ class LintError {
   final AstNode errNode;
   final String? correction;
   final String? url;
+  final plugin.AnalysisErrorSeverity severity;
 
   const LintError({
     required this.message,
     required this.code,
     required this.errNode,
+    required this.severity,
     this.key,
     this.ctxNode,
     this.correction,
@@ -31,7 +32,7 @@ class LintError {
 
     return plugin.AnalysisErrorFixes(
       plugin.AnalysisError(
-        plugin.AnalysisErrorSeverity.WARNING,
+        severity,
         plugin.AnalysisErrorType.LINT,
         location,
         message,
@@ -79,36 +80,4 @@ class LintError {
       'errNode: ${errNode.toSource()}',
     ].join(', ');
   }
-}
-
-int? _findNearestComma(
-  Token beginToken,
-  Token endToken,
-  Token? Function(Token?) next,
-) {
-  Token? token = beginToken;
-
-  while ((token = next(token)) != endToken) {
-    switch (token?.type) {
-      case TokenType.COMMA:
-        return token!.charOffset;
-
-      case TokenType.MULTI_LINE_COMMENT:
-      case TokenType.SINGLE_LINE_COMMENT:
-        continue;
-
-      default:
-        return null;
-    }
-  }
-
-  return null;
-}
-
-int? _findNextComma(Token beginToken, Token endToken) {
-  return _findNearestComma(beginToken, endToken, (token) => token?.next);
-}
-
-int? _findLastComma(Token beginToken, Token endToken) {
-  return _findNearestComma(beginToken, endToken, (token) => token?.previous);
 }

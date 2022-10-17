@@ -174,6 +174,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
 
     findRulesOfPublicInternal(
       analysisResult: analysisResult,
+      options: options.internalPublicOptions,
       onReport: onReport,
     );
 

@@ -4,6 +4,7 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:public_internal/src/lint/config.dart';
 
 import '../utils/lint_error.dart';
 import 'models.dart';
@@ -14,11 +15,13 @@ const _annotationClass = 'PublicInternal';
 
 void findRulesOfPublicInternal({
   required ResolvedUnitResult analysisResult,
+  required PublicInternalOptions options,
   required void Function(LintError) onReport,
 }) {
   analysisResult.unit.visitChildren(
     _Visitor(
       fileUri: analysisResult.uri,
+      options: options,
       onReport: onReport,
     ),
   );
@@ -26,10 +29,12 @@ void findRulesOfPublicInternal({
 
 class _Visitor extends RecursiveAstVisitor<void> {
   final Uri fileUri;
+  final PublicInternalOptions options;
   final void Function(LintError) onReport;
 
   _Visitor({
     required this.fileUri,
+    required this.options,
     required this.onReport,
   });
 
@@ -68,6 +73,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
         message: '${node.name} is public internal.',
         code: 'public_internal',
         errNode: node,
+        severity: options.severity,
         correction:
             'Use ${node.name} only in ${classInfo.directory.path} directory${annotation.isStrict ? '.' : ' or its subdirectories.'}',
         url: 'https://pub.dev/packages/public_internal',

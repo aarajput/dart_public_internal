@@ -1,18 +1,19 @@
+import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:yaml/yaml.dart';
 
 class Options {
   const Options({
     this.analyzer = const AnalyzerCommonOptions(),
-    this.flutterHooksLintPlugin = const FlutterHooksRulesPluginOptions(),
+    this.internalPublicOptions = const PublicInternalOptions(),
   });
 
   factory Options.fromYaml(dynamic yaml) => Options(
         analyzer: AnalyzerCommonOptions.fromYaml(yaml),
-        flutterHooksLintPlugin: FlutterHooksRulesPluginOptions.fromYaml(yaml),
+        internalPublicOptions: PublicInternalOptions.fromYaml(yaml),
       );
 
   final AnalyzerCommonOptions analyzer;
-  final FlutterHooksRulesPluginOptions flutterHooksLintPlugin;
+  final PublicInternalOptions internalPublicOptions;
 }
 
 class AnalyzerCommonOptions {
@@ -61,89 +62,47 @@ class AnalyzerCommonOptions {
   int get hashCode => exclude.fold(0, (acc, e) => acc ^ e.hashCode);
 }
 
-class FlutterHooksRulesPluginOptions {
-  static final String _rootKey = 'flutter_hooks_lint_plugin';
+class PublicInternalOptions {
+  final AnalysisErrorSeverity severity;
 
-  const FlutterHooksRulesPluginOptions({
-    this.exhaustiveKeys = const ExhaustiveKeysOptions(),
+  static final String _rootKey = 'public_internal';
+
+  const PublicInternalOptions({
+    this.severity = AnalysisErrorSeverity.WARNING,
   });
 
-  factory FlutterHooksRulesPluginOptions.fromYaml(dynamic yaml) {
-    if (yaml is! YamlMap) {
-      return FlutterHooksRulesPluginOptions();
-    }
-
+  factory PublicInternalOptions.fromYaml(dynamic yaml) {
     final map = yaml[_rootKey];
 
     if (map is! YamlMap) {
-      return FlutterHooksRulesPluginOptions();
+      return PublicInternalOptions();
     }
 
-    return FlutterHooksRulesPluginOptions(
-      exhaustiveKeys: ExhaustiveKeysOptions.fromYaml(map),
-    );
-  }
-
-  final ExhaustiveKeysOptions exhaustiveKeys;
-
-  @override
-  String toString() {
-    return '{ exhaustiveKeys: $exhaustiveKeys }';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is FlutterHooksRulesPluginOptions &&
-      exhaustiveKeys == other.exhaustiveKeys;
-
-  @override
-  int get hashCode => exhaustiveKeys.hashCode;
-}
-
-class ExhaustiveKeysOptions {
-  static final String _rootKey = 'exhaustive_keys';
-
-  const ExhaustiveKeysOptions({
-    this.constantHooks = const [
-      'useRef',
-      'useIsMounted',
-      'useFocusNode',
-      'useContext',
-    ],
-  });
-
-  final List<String> constantHooks;
-
-  factory ExhaustiveKeysOptions.fromYaml(dynamic yaml) {
-    final map = yaml[_rootKey];
-
-    if (map is! YamlMap) {
-      return ExhaustiveKeysOptions();
+    final sSeverity = map['severity'].toString().toUpperCase();
+    final AnalysisErrorSeverity severity;
+    if (sSeverity == AnalysisErrorSeverity.INFO.name) {
+      severity = AnalysisErrorSeverity.INFO;
+    } else if (sSeverity == AnalysisErrorSeverity.WARNING.name) {
+      severity = AnalysisErrorSeverity.WARNING;
+    } else if (sSeverity == AnalysisErrorSeverity.ERROR.name) {
+      severity = AnalysisErrorSeverity.ERROR;
+    } else {
+      severity = AnalysisErrorSeverity.WARNING;
     }
-
-    final constantHooks = map['constant_hooks'];
-
-    if (constantHooks is! YamlList) {
-      return ExhaustiveKeysOptions();
-    }
-
-    return ExhaustiveKeysOptions(
-      constantHooks: constantHooks.value.whereType<String>().toList(),
+    return PublicInternalOptions(
+      severity: severity,
     );
   }
 
   @override
   String toString() {
-    return '{ constantHooks: $constantHooks }';
+    return '{ public_internal: $severity }';
   }
 
   @override
   bool operator ==(Object other) =>
-      other is ExhaustiveKeysOptions &&
-      constantHooks.length == other.constantHooks.length &&
-      constantHooks.asMap().entries.fold(
-          false, (prev, e) => prev | (e.value == other.constantHooks[e.key]));
+      other is PublicInternalOptions && other.severity == severity;
 
   @override
-  int get hashCode => constantHooks.fold(0, (prev, e) => prev ^ e.hashCode);
+  int get hashCode => severity.hashCode;
 }

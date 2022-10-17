@@ -1,3 +1,7 @@
+## 2.0.0
+
+- Custom lint dependency removed.
+
 ## 1.0.2
 
 - Dart SDK decreased.
