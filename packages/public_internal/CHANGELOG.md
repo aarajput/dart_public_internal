@@ -1,3 +1,7 @@
+## 2.0.2
+
+- analyzer_plugin support range update to 0.11.2
+
 ## 2.0.1
 
 - analyzer support range update to 5.3.1
