@@ -1,3 +1,7 @@
+## 2.0.1
+
+- analyzer support range update to 5.3.1
+
 ## 2.0.0
 
 - Custom lint dependency removed.
