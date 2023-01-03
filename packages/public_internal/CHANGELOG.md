@@ -1,3 +1,7 @@
+## 2.0.3
+
+- crash fixes
+
 ## 2.0.2
 
 - analyzer_plugin support range update to 0.11.2
