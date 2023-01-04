@@ -1,48 +1,48 @@
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:yaml/yaml.dart';
 
-class Options {
-  const Options({
-    this.analyzer = const AnalyzerCommonOptions(),
-    this.internalPublicOptions = const PublicInternalOptions(),
+class Config {
+  const Config({
+    this.analyzer = const AnalyzerCommonConfig(),
+    this.internalPublic = const PublicInternalConfig(),
   });
 
-  factory Options.fromYaml(dynamic yaml) => Options(
-        analyzer: AnalyzerCommonOptions.fromYaml(yaml),
-        internalPublicOptions: PublicInternalOptions.fromYaml(yaml),
+  factory Config.fromYaml(dynamic yaml) => Config(
+        analyzer: AnalyzerCommonConfig.fromYaml(yaml),
+        internalPublic: PublicInternalConfig.fromYaml(yaml),
       );
 
-  final AnalyzerCommonOptions analyzer;
-  final PublicInternalOptions internalPublicOptions;
+  final AnalyzerCommonConfig analyzer;
+  final PublicInternalConfig internalPublic;
 }
 
-class AnalyzerCommonOptions {
+class AnalyzerCommonConfig {
   static final String _rootKey = 'analyzer';
 
-  const AnalyzerCommonOptions({
+  const AnalyzerCommonConfig({
     this.exclude = const [],
   });
 
   final List<String> exclude;
 
-  factory AnalyzerCommonOptions.fromYaml(dynamic yaml) {
+  factory AnalyzerCommonConfig.fromYaml(dynamic yaml) {
     if (yaml is! YamlMap) {
-      return AnalyzerCommonOptions();
+      return AnalyzerCommonConfig();
     }
 
     final map = yaml[_rootKey];
 
     if (map is! YamlMap) {
-      return AnalyzerCommonOptions();
+      return AnalyzerCommonConfig();
     }
 
     final exclude = map['exclude'];
 
     if (exclude is! YamlList) {
-      return AnalyzerCommonOptions();
+      return AnalyzerCommonConfig();
     }
 
-    return AnalyzerCommonOptions(
+    return AnalyzerCommonConfig(
       exclude: exclude.value.whereType<String>().toList(),
     );
   }
@@ -54,7 +54,7 @@ class AnalyzerCommonOptions {
 
   @override
   bool operator ==(Object other) =>
-      other is AnalyzerCommonOptions &&
+      other is AnalyzerCommonConfig &&
       exclude.length == other.exclude.length &&
       exclude.every((e) => other.exclude.contains(e));
 
@@ -62,20 +62,20 @@ class AnalyzerCommonOptions {
   int get hashCode => exclude.fold(0, (acc, e) => acc ^ e.hashCode);
 }
 
-class PublicInternalOptions {
+class PublicInternalConfig {
   final AnalysisErrorSeverity severity;
 
   static final String _rootKey = 'public_internal';
 
-  const PublicInternalOptions({
+  const PublicInternalConfig({
     this.severity = AnalysisErrorSeverity.WARNING,
   });
 
-  factory PublicInternalOptions.fromYaml(dynamic yaml) {
+  factory PublicInternalConfig.fromYaml(dynamic yaml) {
     final map = yaml[_rootKey];
 
     if (map is! YamlMap) {
-      return PublicInternalOptions();
+      return PublicInternalConfig();
     }
 
     final sSeverity = map['severity'].toString().toUpperCase();
@@ -89,7 +89,7 @@ class PublicInternalOptions {
     } else {
       severity = AnalysisErrorSeverity.WARNING;
     }
-    return PublicInternalOptions(
+    return PublicInternalConfig(
       severity: severity,
     );
   }
@@ -101,7 +101,7 @@ class PublicInternalOptions {
 
   @override
   bool operator ==(Object other) =>
-      other is PublicInternalOptions && other.severity == severity;
+      other is PublicInternalConfig && other.severity == severity;
 
   @override
   int get hashCode => severity.hashCode;

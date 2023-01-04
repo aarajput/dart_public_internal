@@ -4,5 +4,7 @@ environment:
   sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  public_internal: ^2.0.2
+#  public_internal: ^2.0.2
+  public_internal:
+    path: /Users/ali/Projects/Dart/open_source/public_internal/packages/public_internal
   web_socket_channel: ^2.2.0

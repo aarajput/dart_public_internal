@@ -5,5 +5,6 @@ class Example1 {}
 
 @PublicInternal(
   parentStep: 1,
+  isStrict: true,
 )
 class Example2 {}

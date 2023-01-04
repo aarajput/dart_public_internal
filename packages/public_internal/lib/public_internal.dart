@@ -17,6 +17,6 @@ void start(List<String> args, SendPort sendPort) {
 // useDebuggingVariant==true in tools/analyzer_plugin/bin/plugin.dart
 void main() {
   LoggingUtils.initialize();
-  final plugin = PublicInternalServerPlugin(PhysicalResourceProvider.INSTANCE);
-  plugin.start(WebSocketPluginServer());
+  PublicInternalServerPlugin(PhysicalResourceProvider.INSTANCE)
+      .start(WebSocketPluginServer());
 }

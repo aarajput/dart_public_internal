@@ -15,13 +15,13 @@ const _annotationClass = 'PublicInternal';
 
 void findRulesOfPublicInternal({
   required ResolvedUnitResult analysisResult,
-  required PublicInternalOptions options,
+  required PublicInternalConfig config,
   required void Function(LintError) onReport,
 }) {
   analysisResult.unit.visitChildren(
     _Visitor(
       fileUri: analysisResult.uri,
-      options: options,
+      options: config,
       onReport: onReport,
     ),
   );
@@ -29,7 +29,7 @@ void findRulesOfPublicInternal({
 
 class _Visitor extends RecursiveAstVisitor<void> {
   final Uri fileUri;
-  final PublicInternalOptions options;
+  final PublicInternalConfig options;
   final void Function(LintError) onReport;
 
   _Visitor({
@@ -106,7 +106,7 @@ PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
         }
       }
     } else if (aElement is PropertyAccessorElement) {
-      if (aElement.returnType.element2?.displayName == _annotationClass) {
+      if (aElement.returnType.element?.displayName == _annotationClass) {
         return PublicInternal();
       }
     }
