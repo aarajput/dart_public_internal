@@ -88,6 +88,41 @@ class PublicInternalServerPlugin extends ServerPlugin {
     }
   }
 
+  @override
+  Future<plugin.EditGetFixesResult> handleEditGetFixes(
+    plugin.EditGetFixesParams parameters,
+  ) async {
+    try {
+      final path = parameters.file;
+      final analysisContext = _contextCollection?.contextFor(path);
+      final resolvedUnit =
+          await analysisContext?.currentSession.getResolvedUnit(path);
+
+      if (analysisContext != null && resolvedUnit is ResolvedUnitResult) {
+        final analysisErrors = _getErrorsForResolvedUnit(
+          resolvedUnit,
+          analysisContext.contextRoot.root.path,
+        ).where((analysisError) {
+          final location = analysisError.error.location;
+
+          return location.file == parameters.file &&
+              location.offset <= parameters.offset &&
+              parameters.offset <= location.offset + location.length &&
+              analysisError.fixes.isNotEmpty;
+        }).toList();
+
+        return plugin.EditGetFixesResult(analysisErrors);
+      }
+    } on Exception catch (e, stackTrace) {
+      channel.sendNotification(
+        plugin.PluginErrorParams(false, e.toString(), stackTrace.toString())
+            .toNotification(),
+      );
+    }
+
+    return plugin.EditGetFixesResult([]);
+  }
+
   List<Glob>? _excludeGlobs;
   final Cache<String, bool> _excludeCache = Cache(5000);
 

@@ -39,7 +39,29 @@ class LintError {
         code,
         correction: correction,
         url: url,
+        hasFix: true,
       ),
+      fixes: [
+        plugin.PrioritizedSourceChange(
+          1,
+          plugin.SourceChange(
+            'Remove',
+            edits: [
+              plugin.SourceFileEdit(
+                location.file,
+                result.exists ? 0 : -1,
+                edits: [
+                  plugin.SourceEdit(
+                    location.offset,
+                    location.length,
+                    '',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
