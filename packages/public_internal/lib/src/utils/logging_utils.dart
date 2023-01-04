@@ -6,13 +6,7 @@ class LoggingUtils {
 
   static void initialize() {
     ansiColorDisabled = false;
-    Logger.root.level = Level.OFF;
-    assert(
-      () {
-        Logger.root.level = Level.ALL;
-        return true;
-      }(),
-    );
+    Logger.root.level = Level.ALL;
     Logger.root.onRecord.listen((final record) {
       AnsiPen? pen;
       if (record.level == Level.SEVERE) {

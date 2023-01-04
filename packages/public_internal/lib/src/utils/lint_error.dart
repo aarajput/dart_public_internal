@@ -86,10 +86,7 @@ class LintError {
   String toReadableString(String file, CompilationUnit unit) {
     final errLoc = _toLocation(errNode, file, unit);
 
-    return '''${errLoc.file} (Line: ${errLoc.startLine}, Col: ${errLoc.startColumn}): $message ($code)
-
-      ${ctxNode?.toSource() ?? errNode.toSource()}
-    ''';
+    return '${errLoc.file} (Line: ${errLoc.startLine}, Col: ${errLoc.startColumn}): $message ($code) ${ctxNode?.toSource() ?? errNode.toSource()}';
   }
 
   @override

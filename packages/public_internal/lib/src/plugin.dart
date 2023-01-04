@@ -66,13 +66,22 @@ class PublicInternalServerPlugin extends ServerPlugin {
           await analysisContext.currentSession.getResolvedUnit(path);
 
       if (resolvedUnit is ResolvedUnitResult) {
-        final analysisErrors =
-            _getErrorsForResolvedUnit(resolvedUnit, rootPath);
+        final lintErrors = getErrorsForResolvedUnit(
+          resolvedUnit,
+          _configs[rootPath],
+        );
 
         channel.sendNotification(
           plugin.AnalysisErrorsParams(
             path,
-            analysisErrors.map((analysisError) => analysisError.error).toList(),
+            lintErrors
+                .map((lintError) => lintError
+                    .toAnalysisErrorFixes(
+                      resolvedUnit.path,
+                      resolvedUnit,
+                    )
+                    .error)
+                .toList(),
           ).toNotification(),
         );
       } else {
@@ -99,10 +108,15 @@ class PublicInternalServerPlugin extends ServerPlugin {
           await analysisContext?.currentSession.getResolvedUnit(path);
 
       if (analysisContext != null && resolvedUnit is ResolvedUnitResult) {
-        final analysisErrors = _getErrorsForResolvedUnit(
+        final analysisErrors = getErrorsForResolvedUnit(
           resolvedUnit,
-          analysisContext.contextRoot.root.path,
-        ).where((analysisError) {
+          _configs[analysisContext.contextRoot.root.path],
+        )
+            .map((lintError) => lintError.toAnalysisErrorFixes(
+                  resolvedUnit.path,
+                  resolvedUnit,
+                ))
+            .where((analysisError) {
           final location = analysisError.error.location;
 
           return location.file == parameters.file &&
@@ -123,15 +137,14 @@ class PublicInternalServerPlugin extends ServerPlugin {
     return plugin.EditGetFixesResult([]);
   }
 
-  List<Glob>? _excludeGlobs;
-  final Cache<String, bool> _excludeCache = Cache(5000);
+  static List<Glob>? _excludeGlobs;
+  static final Cache<String, bool> _excludeCache = Cache(5000);
 
-  List<plugin.AnalysisErrorFixes> _getErrorsForResolvedUnit(
+  static List<LintError> getErrorsForResolvedUnit(
     ResolvedUnitResult analysisResult,
-    String rootPath,
+    Config? config,
   ) {
-    final errors = <plugin.AnalysisErrorFixes>[];
-    final config = _configs[rootPath];
+    final errors = <LintError>[];
     if (config == null) {
       return [];
     }
@@ -159,12 +172,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
         return;
       }
 
-      errors.add(
-        err.toAnalysisErrorFixes(
-          analysisResult.path,
-          analysisResult,
-        ),
-      );
+      errors.add(err);
     }
 
     findRulesOfPublicInternal(
