@@ -1,3 +1,8 @@
+## 2.1.0
+
+- cli support added
+- analyzer_plugin bugs fixed
+
 ## 2.0.3
 
 - crash fixes
