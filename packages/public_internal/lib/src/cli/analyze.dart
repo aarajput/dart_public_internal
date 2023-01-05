@@ -80,6 +80,7 @@ class AnalyzeCommand extends Command {
   }
 
   Future<List<String>> _checkContext(DriverBasedAnalysisContext context) async {
+    _logger.info('Analyzing ${context.contextRoot.root.path}');
     final errors = <String>[];
 
     final config = _loadConfig(context.contextRoot.optionsFile);
@@ -89,23 +90,25 @@ class AnalyzeCommand extends Command {
     for (final filePath in context.contextRoot.analyzedFiles()) {
       if (!filePath.endsWith('.dart')) continue;
       if (excludeGlobs.any((e) => e.matches(filePath))) continue;
+      if (config.internalPublic.exclude.any((e) => e.matches(filePath))) continue;
 
-      final result = await context.currentSession.getResolvedUnit(filePath);
+      final resolvedUnit = await context.currentSession.getResolvedUnit(filePath);
 
-      if (result is ResolvedUnitResult) {
+      if (resolvedUnit is ResolvedUnitResult) {
         final errorFixes = PublicInternalServerPlugin.getErrorsForResolvedUnit(
-          result,
+          resolvedUnit,
           config,
         );
         errors.addAll(
           errorFixes.map(
             (err) => err.toReadableString(
               filePath,
-              result.unit,
+              resolvedUnit.unit,
             ),
           ),
         );
       }
+      _logger.config('Analyzed $filePath');
     }
 
     return errors;

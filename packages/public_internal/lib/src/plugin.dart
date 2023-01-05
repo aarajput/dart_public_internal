@@ -18,6 +18,8 @@ import 'utils/suppression.dart';
 class PublicInternalServerPlugin extends ServerPlugin {
   final _configs = <String, Config>{};
   AnalysisContextCollection? _contextCollection;
+  List<Glob>? _excludeGlobs;
+  final Cache<String, bool> _excludeCache = Cache(5000);
 
   @override
   String get contactInfo =>
@@ -54,12 +56,28 @@ class PublicInternalServerPlugin extends ServerPlugin {
     required AnalysisContext analysisContext,
     required String path,
   }) async {
+    if (!path.endsWith('.dart')) {
+      return;
+    }
     final isAnalyzed = analysisContext.contextRoot.isAnalyzed(path);
     if (!isAnalyzed) {
       return;
     }
-
     final rootPath = analysisContext.contextRoot.root.path;
+    final config = _configs[rootPath];
+    if (config == null) {
+      return;
+    }
+
+    _excludeGlobs ??= config.internalPublic.exclude;
+    final excluded = _excludeCache.doCache(
+      path,
+      () => _excludeGlobs!.any((e) => e.matches(path)),
+    );
+
+    if (excluded) {
+      return;
+    }
 
     try {
       final resolvedUnit =
@@ -68,7 +86,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
       if (resolvedUnit is ResolvedUnitResult) {
         final lintErrors = getErrorsForResolvedUnit(
           resolvedUnit,
-          _configs[rootPath],
+          config,
         );
 
         channel.sendNotification(
@@ -106,26 +124,28 @@ class PublicInternalServerPlugin extends ServerPlugin {
       final analysisContext = _contextCollection?.contextFor(path);
       final resolvedUnit =
           await analysisContext?.currentSession.getResolvedUnit(path);
-
       if (analysisContext != null && resolvedUnit is ResolvedUnitResult) {
-        final analysisErrors = getErrorsForResolvedUnit(
-          resolvedUnit,
-          _configs[analysisContext.contextRoot.root.path],
-        )
-            .map((lintError) => lintError.toAnalysisErrorFixes(
-                  resolvedUnit.path,
-                  resolvedUnit,
-                ))
-            .where((analysisError) {
-          final location = analysisError.error.location;
+        final config = _configs[analysisContext.contextRoot.root.path];
+        if (config != null) {
+          final analysisErrors = getErrorsForResolvedUnit(
+            resolvedUnit,
+            config,
+          )
+              .map((lintError) => lintError.toAnalysisErrorFixes(
+                    resolvedUnit.path,
+                    resolvedUnit,
+                  ))
+              .where((analysisError) {
+            final location = analysisError.error.location;
 
-          return location.file == parameters.file &&
-              location.offset <= parameters.offset &&
-              parameters.offset <= location.offset + location.length &&
-              analysisError.fixes.isNotEmpty;
-        }).toList();
+            return location.file == parameters.file &&
+                location.offset <= parameters.offset &&
+                parameters.offset <= location.offset + location.length &&
+                analysisError.fixes.isNotEmpty;
+          }).toList();
 
-        return plugin.EditGetFixesResult(analysisErrors);
+          return plugin.EditGetFixesResult(analysisErrors);
+        }
       }
     } on Exception catch (e, stackTrace) {
       channel.sendNotification(
@@ -137,34 +157,15 @@ class PublicInternalServerPlugin extends ServerPlugin {
     return plugin.EditGetFixesResult([]);
   }
 
-  static List<Glob>? _excludeGlobs;
-  static final Cache<String, bool> _excludeCache = Cache(5000);
-
   static List<LintError> getErrorsForResolvedUnit(
-    ResolvedUnitResult analysisResult,
-    Config? config,
+    ResolvedUnitResult resolvedUnit,
+    Config config,
   ) {
     final errors = <LintError>[];
-    if (config == null) {
-      return [];
-    }
-    final path = analysisResult.path;
-    if (!path.endsWith('.dart')) {
-      return [];
-    }
-    _excludeGlobs ??= config.analyzer.exclude.map((e) => Glob(e)).toList();
-    final excluded = _excludeCache.doCache(
-      path,
-      () => _excludeGlobs!.any((e) => e.matches(path)),
-    );
-
-    if (excluded) {
-      return [];
-    }
 
     final suppression = Suppression(
-      content: analysisResult.content,
-      lineInfo: analysisResult.unit.lineInfo,
+      content: resolvedUnit.content,
+      lineInfo: resolvedUnit.unit.lineInfo,
     );
 
     void onReport(LintError err) {
@@ -176,7 +177,7 @@ class PublicInternalServerPlugin extends ServerPlugin {
     }
 
     findRulesOfPublicInternal(
-      analysisResult: analysisResult,
+      resolvedUnit: resolvedUnit,
       config: config.internalPublic,
       onReport: onReport,
     );

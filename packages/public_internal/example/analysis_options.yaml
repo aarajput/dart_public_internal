@@ -2,3 +2,8 @@ include: package:lints/recommended.yaml
 analyzer:
   plugins:
     - public_internal
+
+public_internal:
+  severity: info
+  exclude:
+    - '**/*.ag.dart'

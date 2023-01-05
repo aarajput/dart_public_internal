@@ -1,4 +1,5 @@
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
+import 'package:glob/glob.dart';
 import 'package:yaml/yaml.dart';
 
 class Config {
@@ -64,11 +65,12 @@ class AnalyzerCommonConfig {
 
 class PublicInternalConfig {
   final AnalysisErrorSeverity severity;
-
+  final List<Glob> exclude;
   static final String _rootKey = 'public_internal';
 
   const PublicInternalConfig({
     this.severity = AnalysisErrorSeverity.WARNING,
+    this.exclude = const [],
   });
 
   factory PublicInternalConfig.fromYaml(dynamic yaml) {
@@ -89,8 +91,22 @@ class PublicInternalConfig {
     } else {
       severity = AnalysisErrorSeverity.WARNING;
     }
+    final dExclude = map['exclude'];
+    final List<Glob> exclude;
+    if (dExclude is YamlList) {
+      final isAnyNotString = dExclude.any((ele) => ele is! String);
+      if (!isAnyNotString) {
+        exclude = dExclude.map((ele) => Glob(ele.toString())).toList()
+          ..addAll(dExclude.map((ele) => Glob('/$ele')));
+      } else {
+        exclude = [];
+      }
+    } else {
+      exclude = [];
+    }
     return PublicInternalConfig(
       severity: severity,
+      exclude: exclude,
     );
   }
 

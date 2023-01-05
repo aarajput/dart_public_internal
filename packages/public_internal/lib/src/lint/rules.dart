@@ -14,13 +14,13 @@ const _annotationPackage =
 const _annotationClass = 'PublicInternal';
 
 void findRulesOfPublicInternal({
-  required ResolvedUnitResult analysisResult,
+  required ResolvedUnitResult resolvedUnit,
   required PublicInternalConfig config,
   required void Function(LintError) onReport,
 }) {
-  analysisResult.unit.visitChildren(
+  resolvedUnit.unit.visitChildren(
     _Visitor(
-      fileUri: analysisResult.uri,
+      fileUri: resolvedUnit.uri,
       options: config,
       onReport: onReport,
     ),

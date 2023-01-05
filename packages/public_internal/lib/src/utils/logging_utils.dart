@@ -19,6 +19,8 @@ class LoggingUtils {
         pen = AnsiPen()..cyan();
       } else if (record.level == Level.FINER) {
         pen = AnsiPen()..green();
+      } else if (record.level == Level.CONFIG) {
+        pen = AnsiPen()..rgb(r: 0.5, g: 0.5, b: 0.5);
       } else if (record.level == Level.OFF) {
         pen = null;
       } else {
