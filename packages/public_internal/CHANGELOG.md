@@ -1,3 +1,7 @@
+## 2.2.0
+
+- memory issue resolved
+
 ## 2.1.0
 
 - cli support added
