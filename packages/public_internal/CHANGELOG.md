@@ -1,3 +1,7 @@
+## 2.2.1
+
+- analyzer version updated
+
 ## 2.2.0
 
 - memory issue resolved
