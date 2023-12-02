@@ -46,7 +46,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
 
   void _visitSimpleIdentifier(SimpleIdentifier node) {
     final element = node.staticElement;
-    if (element is! ClassElement) {
+    if (element is! InterfaceElement) {
       return;
     }
     final annotation = _getPublicInternalAnnotation(element);
@@ -82,7 +82,7 @@ class _Visitor extends RecursiveAstVisitor<void> {
   }
 }
 
-PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
+PublicInternal? _getPublicInternalAnnotation(final InterfaceElement cls) {
   for (final annotation in cls.metadata) {
     final aElement = annotation.element;
     if (aElement?.location?.components.contains(_annotationPackage) != true) {
@@ -116,7 +116,7 @@ PublicInternal? _getPublicInternalAnnotation(final ClassElement cls) {
 
 ClassInfo _isInCorrectFolder({
   required Uri unitUri,
-  required ClassElement mainClass,
+  required InterfaceElement mainClass,
   required PublicInternal annotation,
 }) {
   final unitFile = File(unitUri.path);

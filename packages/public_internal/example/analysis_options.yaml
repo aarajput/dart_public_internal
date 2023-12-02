@@ -4,6 +4,6 @@ analyzer:
     - public_internal
 
 public_internal:
-  severity: info
+  severity: warn
   exclude:
     - '**/*.ag.dart'

@@ -1,5 +1,9 @@
 [PublicInternal]: https://pub.dartlang.org/packages/public_internal
 
+## 2.3.0
+
+- enum support added
+
 ## 2.0.0
 
 - Dart minimum to 2.12.0.

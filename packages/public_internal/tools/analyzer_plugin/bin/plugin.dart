@@ -4,6 +4,8 @@ import 'dart:isolate';
 import 'package:public_internal/public_internal.dart' as public_internal;
 import 'package:web_socket_channel/io.dart';
 
+// delete .dartServer after changing its value
+// and use absolute path in tools/pubspec.yaml for public_internal
 const useDebuggingVariant = false;
 
 void main(List<String> args, SendPort sendPort) {

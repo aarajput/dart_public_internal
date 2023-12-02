@@ -11,6 +11,5 @@ dependencies:
 
 dev_dependencies:
   lints: ^2.0.0
-  custom_lint:
   public_internal:
     path: ../

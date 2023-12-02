@@ -1,3 +1,7 @@
+## 2.3.0
+
+- enum support added
+
 ## 2.2.1
 
 - analyzer version updated

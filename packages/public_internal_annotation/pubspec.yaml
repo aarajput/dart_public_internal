@@ -1,6 +1,6 @@
 name: public_internal_annotation
 description: Annotations for the Public Internal Linter. This package does nothing without Public Internal.
-version: 2.0.0
+version: 2.3.0
 homepage: https://github.com/aarajput/dart_public_internal/tree/master/packages/public_internal_annotation
 repository: https://github.com/aarajput/dart_public_internal
 issue_tracker: https://github.com/aarajput/dart_public_internal/issues
