@@ -1,7 +1,8 @@
 [PublicInternal]: https://pub.dartlang.org/packages/public_internal
 
-## 2.3.0
+## 3.0.0
 
+- sdk to >=2.12.0 <4.0.0
 - enum support added
 
 ## 2.0.0
